@@ -1,0 +1,6 @@
+{
+  "buildCommand": "pnpm --filter @workspace/vort run build",
+  "outputDirectory": "artifacts/vort/.next",
+  "installCommand": "pnpm install --frozen-lockfile=false",
+  "framework": "nextjs"
+}

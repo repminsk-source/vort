@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Zap, Code2, Database, Globe, Sparkles, CheckCircle } from "lucide-react";
+import { VortLogo } from "@/components/vort-logo";
 
 const steps = [
   {
