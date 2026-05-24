@@ -1,182 +1,154 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MessageSquare, Cpu, FileCode2, Download, ArrowRight, CheckCircle, Zap } from "lucide-react";
+import { ScrollReveal } from "@/components/scroll-reveal";
 
 export const metadata: Metadata = {
-  title: "Как это работает — Vort",
-  description: "Пошаговое объяснение того, как Vort превращает вашу идею в готовое приложение",
+  title: "Как работает — Vort",
+  description: "Как Vort превращает описание в рабочий код приложения.",
 };
 
-const steps = [
+const STEPS = [
   {
-    icon: <MessageSquare size={28} />,
-    title: "Опишите свою идею",
-    description:
-      "Откройте AI Builder и напишите, что вы хотите создать. Используйте обычный русский язык — никакого технического жаргона не нужно. Чем подробнее описание, тем точнее результат.",
-    example: "Создай веб-приложение для учёта личных финансов с графиками расходов по категориям, возможностью добавлять транзакции и экспортом в Excel",
-    points: [
-      "Описывайте функциональность, не технологии",
-      "Упоминайте ключевые сущности (пользователи, товары, заказы)",
-      "Указывайте особые требования если есть",
-    ],
+    n:"01", title:"Вы описываете идею",
+    body:"Пишете на русском, что хотите создать. Никакого технического жаргона — просто опишите задачу.",
+    detail:`"Сделай CRM для отдела продаж. Нужны контакты, история звонков, статусы сделок и воронка."`,
   },
   {
-    icon: <Cpu size={28} />,
-    title: "AI анализирует запрос",
-    description:
-      "Vort передаёт ваш запрос локальной языковой модели через Ollama. Модель анализирует требования и планирует архитектуру приложения — от структуры БД до API endpoints.",
-    example: "Vort определяет: нужны таблицы transactions, categories, users; REST API с CRUD для каждой; компоненты Dashboard, TransactionList, Chart",
-    points: [
-      "Локальная обработка — данные не покидают ваш компьютер",
-      "Работает с любой моделью Ollama (llama3, mistral, qwen и др.)",
-      "Понимает контекст и предметную область",
-    ],
+    n:"02", title:"AI анализирует запрос",
+    body:"Vort разбирает запрос: определяет сущности, связи, бизнес-логику. Строит граф до генерации кода.",
+    detail:"Модели: Llama 3.2, Mistral, Qwen 2.5 Coder, DeepSeek Coder, Code Llama.",
   },
   {
-    icon: <FileCode2 size={28} />,
-    title: "Генерация кода и схем",
-    description:
-      "На основе анализа Vort генерирует полный набор артефактов: SQL-схему базы данных, TypeScript типы, React компоненты, API маршруты и структуру папок проекта.",
-    example: "CREATE TABLE transactions (id SERIAL PRIMARY KEY, amount DECIMAL, category_id INT, created_at TIMESTAMP...)",
-    points: [
-      "SQL DDL для создания схемы базы данных",
-      "TypeScript интерфейсы для всех сущностей",
-      "React компоненты с TypeScript props",
-      "Express/Next.js API роуты с валидацией",
-    ],
+    n:"03", title:"Генерирует структуру",
+    body:"SQL-схема, TypeScript-типы, Zod-валидация, REST API — всё последовательно и без противоречий.",
+    detail:"PostgreSQL / SQLite, Drizzle ORM, Express / Next.js API Routes.",
   },
   {
-    icon: <Download size={28} />,
-    title: "Экспорт и использование",
-    description:
-      "Скопируйте сгенерированный код или скачайте всё одним файлом. Код готов к использованию — просто вставьте в ваш проект и адаптируйте под нужды.",
-    example: "Экспорт: JSON с полной структурой, Markdown с документацией, или копирование отдельных блоков",
-    points: [
-      "Копирование в буфер обмена одним кликом",
-      "Экспорт в JSON или Markdown",
-      "История всех генераций в сессии",
-    ],
+    n:"04", title:"Строит компоненты",
+    body:"React-компоненты с типами, хуки для запросов, адаптивная вёрстка — готово к подключению.",
+    detail:"React 18+, TypeScript, Tailwind CSS, React Query / SWR.",
+  },
+  {
+    n:"05", title:"Вы копируете результат",
+    body:"Один клик — код в буфере. Или скачайте Markdown со всей структурой. Вставьте в проект — готово.",
+    detail:"Среднее время: 1–3 секунды. Работает полностью локально.",
   },
 ];
 
-const techStack = [
-  { name: "Next.js 15", desc: "Фреймворк для React с App Router" },
-  { name: "Vercel AI SDK", desc: "Стриминг ответов от AI моделей" },
-  { name: "Ollama", desc: "Локальный запуск языковых моделей" },
-  { name: "TypeScript", desc: "Типизированный JavaScript" },
-  { name: "Tailwind CSS v4", desc: "Утилитарный CSS-фреймворк" },
+const FAQ = [
+  { q:"Нужно ли устанавливать Ollama?",     a:"Да. Ollama — локальный AI-сервер. Скачайте на ollama.com, запустите и выберите модель." },
+  { q:"Какую модель лучше использовать?",    a:"Для кода — Qwen 2.5 Coder или DeepSeek Coder. Llama 3.2 универсальна и работает быстрее." },
+  { q:"Данные отправляются в облако?",       a:"Нет. Всё работает на вашем компьютере через Ollama. Никакие данные никуда не уходят." },
+  { q:"Можно использовать без знания кода?", a:"Да. Вы описываете бизнес-задачу, AI сам решает как её реализовать технически." },
+  { q:"Что делать с готовым кодом?",         a:"Скопируйте в ваш Next.js / Express / TypeScript-проект. Запустите миграции и используйте." },
 ];
 
 export default function HowPage() {
   return (
-    <div className="pt-24 pb-20 px-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-20">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Как работает Vort</h1>
-          <p className="text-lg" style={{ color: "var(--text-muted)" }}>
-            От идеи до готового кода — четыре простых шага
-          </p>
+    <>
+      {/* ─ Header ─ */}
+      <section style={{
+        padding:"clamp(100px,14vw,160px) clamp(16px,4vw,24px) clamp(48px,6vw,80px)",
+        borderBottom:"1px solid var(--border)",
+      }}>
+        <div style={{ maxWidth:1200, margin:"0 auto" }}>
+          <div style={{ maxWidth:600 }}>
+            <p style={{ fontSize:11, fontWeight:700, letterSpacing:".1em",
+              color:"var(--text-3)", textTransform:"uppercase", marginBottom:16 }}>Как работает</p>
+            <h1 className="a1" style={{ marginBottom:20 }}>От слов<br/>к коду</h1>
+            <p className="a2" style={{ fontSize:"clamp(.9rem,2vw,1.05rem)",
+              color:"var(--text-2)", lineHeight:1.72 }}>
+              Vort использует Ollama — локальный AI-сервер — чтобы превращать описание на русском в рабочую архитектуру приложения.
+            </p>
+          </div>
         </div>
+      </section>
 
-        {/* Steps */}
-        <div className="space-y-16 mb-24">
-          {steps.map((step, i) => (
-            <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-              <div className={i % 2 === 1 ? "md:order-2" : ""}>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: "rgba(124,92,252,0.15)", color: "var(--primary-light)" }}>
-                    {step.icon}
-                  </div>
+      {/* ─ Steps ─ */}
+      <section style={{ padding:"clamp(48px,7vw,100px) clamp(16px,4vw,24px)" }}>
+        <div style={{ maxWidth:1200, margin:"0 auto" }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+            {STEPS.map((s, i) => (
+              <ScrollReveal key={i} delay={i * 60}>
+                <div className="card-hover" style={{
+                  display:"grid",
+                  gridTemplateColumns:"clamp(48px,6vw,80px) 1fr",
+                  gap:"clamp(14px,3vw,40px)",
+                  padding:"clamp(20px,3vw,32px) clamp(16px,2.5vw,28px)",
+                  border:"1px solid var(--border)", background:"var(--bg-1)",
+                  borderRadius: i===0 ? "14px 14px 0 0" : i===STEPS.length-1 ? "0 0 14px 14px" : 0,
+                  alignItems:"start",
+                }}>
+                  <span style={{
+                    fontSize:"clamp(1.4rem,3.5vw,2.2rem)", fontWeight:900,
+                    letterSpacing:"-.04em", color:"var(--text-3)",
+                    fontFamily:"ui-monospace,monospace", lineHeight:1,
+                    paddingTop:3,
+                  }}>{s.n}</span>
+
                   <div>
-                    <div className="text-xs font-bold mb-0.5" style={{ color: "var(--primary-light)" }}>
-                      ШАГ {i + 1}
+                    <h3 style={{ fontSize:"clamp(.93rem,2vw,1.03rem)", fontWeight:700,
+                      marginBottom:10, letterSpacing:"-.02em" }}>{s.title}</h3>
+                    <p style={{ fontSize:"clamp(.82rem,1.5vw,.88rem)", color:"var(--text-2)",
+                      lineHeight:1.7, marginBottom:14 }}>{s.body}</p>
+                    <div style={{
+                      display:"inline-block", padding:"8px 14px", borderRadius:8,
+                      border:"1px solid var(--border-2)", background:"var(--bg-3)",
+                    }}>
+                      <p style={{ fontSize:"clamp(.76rem,1.4vw,.80rem)", color:"var(--text-2)",
+                        lineHeight:1.6, fontStyle:"italic", margin:0 }}>{s.detail}</p>
                     </div>
-                    <h2 className="text-xl font-bold">{step.title}</h2>
                   </div>
                 </div>
-                <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--text-muted)" }}>
-                  {step.description}
-                </p>
-                <ul className="space-y-2">
-                  {step.points.map((p, j) => (
-                    <li key={j} className="flex items-start gap-2 text-sm" style={{ color: "var(--text-muted)" }}>
-                      <CheckCircle size={14} className="mt-0.5 flex-shrink-0" style={{ color: "var(--accent)" }} />
-                      {p}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className={i % 2 === 1 ? "md:order-1" : ""}>
-                <div className="p-5 rounded-xl border" style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-                  <div className="text-xs font-medium mb-3" style={{ color: "var(--text-dim)" }}>ПРИМЕР</div>
-                  <p className="text-sm font-mono leading-relaxed" style={{ color: "var(--accent)" }}>
-                    {step.example}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Tech stack */}
-        <div className="p-8 rounded-2xl border mb-12" style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-          <h2 className="text-xl font-bold mb-6">Технический стек</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {techStack.map((t) => (
-              <div key={t.name} className="p-4 rounded-xl" style={{ background: "var(--bg-elevated)" }}>
-                <div className="font-semibold text-sm mb-1">{t.name}</div>
-                <div className="text-xs" style={{ color: "var(--text-muted)" }}>{t.desc}</div>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* Ollama setup */}
-        <div className="p-8 rounded-2xl border mb-16" style={{ background: "var(--bg-card)", borderColor: "rgba(124,92,252,0.3)" }}>
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <Cpu size={20} style={{ color: "var(--primary-light)" }} />
-            Настройка Ollama
-          </h2>
-          <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
-            Vort работает с Ollama — локальным провайдером AI. Для работы необходимо:
-          </p>
-          <ol className="space-y-3">
-            {[
-              { cmd: "curl -fsSL https://ollama.ai/install.sh | sh", desc: "Установить Ollama" },
-              { cmd: "ollama pull llama3.2", desc: "Скачать модель llama3.2 (или любую другую)" },
-              { cmd: "ollama serve", desc: "Запустить сервер на localhost:11434" },
-            ].map((s, i) => (
-              <li key={i} className="flex items-start gap-3">
-                <span className="text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                  style={{ background: "rgba(124,92,252,0.2)", color: "var(--primary-light)" }}>
-                  {i + 1}
-                </span>
-                <div>
-                  <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>{s.desc}</p>
-                  <code className="text-xs px-3 py-1.5 rounded block font-mono"
-                    style={{ background: "var(--bg-elevated)", color: "var(--accent)" }}>
-                    {s.cmd}
-                  </code>
+      {/* ─ FAQ ─ */}
+      <section style={{ padding:"clamp(48px,7vw,80px) clamp(16px,4vw,24px)", background:"var(--bg-1)" }}>
+        <div style={{ maxWidth:720, margin:"0 auto" }}>
+          <ScrollReveal>
+            <h2 style={{ marginBottom:"clamp(24px,4vw,40px)" }}>Вопросы</h2>
+          </ScrollReveal>
+          <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+            {FAQ.map((f, i) => (
+              <ScrollReveal key={i} delay={i * 50}>
+                <div style={{
+                  padding:"clamp(16px,2.5vw,22px) clamp(16px,2.5vw,24px)",
+                  border:"1px solid var(--border)", background:"var(--bg-2)",
+                  borderRadius: i===0 ? "14px 14px 0 0" : i===FAQ.length-1 ? "0 0 14px 14px" : 0,
+                }}>
+                  <p style={{ fontWeight:600, fontSize:"clamp(.88rem,2vw,.93rem)",
+                    marginBottom:8, color:"var(--text)" }}>{f.q}</p>
+                  <p style={{ fontSize:"clamp(.82rem,1.5vw,.87rem)", color:"var(--text-2)", lineHeight:1.65 }}>{f.a}</p>
                 </div>
-              </li>
+              </ScrollReveal>
             ))}
-          </ol>
+          </div>
         </div>
+      </section>
 
-        {/* CTA */}
-        <div className="text-center">
-          <Link href="/build"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white transition-all hover:opacity-90"
-            style={{ background: "linear-gradient(135deg, var(--primary), var(--accent))" }}>
-            <Zap size={18} />
-            Попробовать сейчас
-            <ArrowRight size={16} />
-          </Link>
+      {/* ─ CTA ─ */}
+      <section style={{ padding:"clamp(48px,7vw,80px) clamp(16px,4vw,24px)" }}>
+        <div style={{ maxWidth:520, margin:"0 auto", textAlign:"center" }}>
+          <ScrollReveal>
+            <h2 style={{ marginBottom:16 }}>Попробуйте сейчас</h2>
+            <p style={{ fontSize:"clamp(.88rem,2vw,.95rem)", color:"var(--text-2)",
+              lineHeight:1.7, marginBottom:28 }}>
+              Запустите Ollama, откройте Builder и опишите свою идею.
+            </p>
+            <Link href="/build" className="btn-white" style={{
+              display:"inline-flex", alignItems:"center", justifyContent:"center",
+              padding:"clamp(10px,2vw,13px) clamp(24px,4vw,32px)", borderRadius:10,
+              fontWeight:700, fontSize:"clamp(13px,2vw,14px)",
+              color:"var(--bg)", textDecoration:"none", background:"var(--white)",
+              boxShadow:"0 4px 24px rgba(0,0,0,.5)",
+            }}>Открыть Builder</Link>
+          </ScrollReveal>
         </div>
-      </div>
-    </div>
+      </section>
+    </>
   );
 }
