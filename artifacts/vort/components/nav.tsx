@@ -2,77 +2,69 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Zap } from "lucide-react";
 import { VortLogo } from "@/components/vort-logo";
-import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "/", label: "Главная" },
-  { href: "/how", label: "Как это работает" },
+  { href: "/how",      label: "Как работает" },
   { href: "/examples", label: "Примеры" },
-  { href: "/pricing", label: "Цены" },
+  { href: "/pricing",  label: "Цены" },
 ];
 
 export function Nav() {
   const pathname = usePathname();
 
   return (
-    <header
-      className="fixed top-0 left-0 right-0 z-50 border-b"
-      style={{
-        background: "rgba(8,8,13,0.88)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        borderColor: "var(--border)",
-        willChange: "transform",
-      }}
-    >
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5 font-bold text-xl tracking-tight">
-          <VortLogo size={34} />
-          <span
-            style={{
-              fontWeight: 800,
-              letterSpacing: "-0.03em",
-              background: "linear-gradient(135deg, #9d7ffe, #00d4ff)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            Vort
-          </span>
+    <header style={{
+      position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+      borderBottom: "1px solid var(--border)",
+      background: "rgba(4,4,10,0.82)",
+      backdropFilter: "blur(24px)",
+      WebkitBackdropFilter: "blur(24px)",
+    }}>
+      <div style={{
+        maxWidth: 1200, margin: "0 auto",
+        padding: "0 24px",
+        height: 60,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        {/* Logo */}
+        <Link href="/" style={{ display:"flex", alignItems:"center", gap:10, textDecoration:"none" }}>
+          <VortLogo size={32} />
+          <span style={{
+            fontWeight: 800, fontSize: 20, letterSpacing: "-0.04em",
+            background: "linear-gradient(120deg,#a78bfa,#22d3ee)",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+          }}>Vort</span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-1">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                pathname === link.href ? "text-white" : "hover:text-white"
-              )}
-              style={{
-                color: pathname === link.href ? "var(--text)" : "var(--text-muted)",
-                background: pathname === link.href ? "var(--bg-elevated)" : "transparent",
-              }}
-            >
-              {link.label}
+        {/* Links */}
+        <nav style={{ display:"flex", alignItems:"center", gap:2 }}>
+          {links.map(l => (
+            <Link key={l.href} href={l.href} style={{
+              padding: "7px 14px", borderRadius: 8,
+              fontSize: 14, fontWeight: 500, textDecoration: "none",
+              transition: "background .15s, color .15s",
+              color: pathname === l.href ? "var(--text)" : "var(--text-2)",
+              background: pathname === l.href ? "var(--bg-2)" : "transparent",
+            }}>
+              {l.label}
             </Link>
           ))}
         </nav>
 
-        <Link
-          href="/build"
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:opacity-90 hover:scale-[1.03] active:scale-95"
-          style={{
-            background: "linear-gradient(135deg, #7c5cfc, #00d4ff)",
-            boxShadow: "0 0 20px rgba(124,92,252,0.35)",
-          }}
+        {/* CTA */}
+        <Link href="/build" style={{
+          display:"flex", alignItems:"center", gap:7,
+          padding: "9px 20px", borderRadius: 10,
+          fontSize: 14, fontWeight: 700, color: "white", textDecoration: "none",
+          background: "linear-gradient(135deg,#7655fc,#22d3ee)",
+          boxShadow: "0 0 24px rgba(118,85,252,.4), inset 0 1px 0 rgba(255,255,255,.15)",
+          transition: "opacity .15s, transform .15s",
+        }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity=".88"; (e.currentTarget as HTMLElement).style.transform="scale(1.03)"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity="1";   (e.currentTarget as HTMLElement).style.transform="scale(1)"; }}
         >
-          <Zap size={14} />
-          Запустить
+          ⚡ Запустить
         </Link>
       </div>
     </header>

@@ -4,91 +4,96 @@ import { useChat } from "ai/react";
 import { useRef, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import {
-  Send, Zap, Download, Trash2, Copy, Check,
-  AlertCircle, Loader2, RotateCcw, ChevronDown
-} from "lucide-react";
-import { cn } from "@/lib/utils";
 
-const QUICK_PROMPTS = [
-  "Создай CRM-систему для отдела продаж с историей сделок, контактами и отчётами",
-  "Онлайн-магазин с каталогом товаров, корзиной и оплатой через Stripe",
-  "Канбан-доска для команды с задачами, статусами и назначением исполнителей",
-  "Приложение для учёта личных финансов с категориями расходов и графиками",
-  "Платформа для публикации статей с редактором, тегами и комментариями",
-  "Система бронирования услуг с расписанием мастеров и онлайн-оплатой",
-  "Дашборд аналитики с графиками продаж, конверсий и активных пользователей",
-  "Мобильное приложение для фитнес-трекинга с тренировками и статистикой",
+const PROMPTS = [
+  { icon:"🏢", label:"CRM-система",       text:"Создай CRM для отдела продаж с историей сделок, контактами, воронкой и аналитикой" },
+  { icon:"🛒", label:"Интернет-магазин",  text:"Онлайн-магазин с каталогом товаров, корзиной, фильтрами и оплатой через Stripe" },
+  { icon:"📋", label:"Канбан-доска",      text:"Трекер задач с канбан-колонками, назначением исполнителей, дедлайнами и комментариями" },
+  { icon:"💰", label:"Финансы",           text:"Приложение учёта личных финансов с категориями расходов, бюджетом и графиками по месяцам" },
+  { icon:"📝", label:"Блог-платформа",    text:"Платформа для публикации статей с MDX-редактором, тегами, лайками и комментариями" },
+  { icon:"📅", label:"Бронирование",      text:"Система бронирования услуг с расписанием мастеров, уведомлениями и онлайн-оплатой" },
+  { icon:"📊", label:"Аналитика",         text:"Дашборд аналитики с графиками продаж, конверсий, воронки и активных пользователей" },
+  { icon:"🏋️", label:"Фитнес-трекер",    text:"Мобильное приложение для трекинга тренировок со статистикой, целями и прогрессом" },
 ];
 
 const MODELS = [
-  { value: "llama3.2", label: "Llama 3.2" },
-  { value: "llama3.1", label: "Llama 3.1" },
-  { value: "mistral", label: "Mistral" },
-  { value: "qwen2.5-coder", label: "Qwen 2.5 Coder" },
-  { value: "deepseek-coder", label: "DeepSeek Coder" },
-  { value: "codellama", label: "Code Llama" },
+  { v:"llama3.2",        l:"Llama 3.2" },
+  { v:"llama3.1",        l:"Llama 3.1" },
+  { v:"mistral",         l:"Mistral" },
+  { v:"qwen2.5-coder",   l:"Qwen 2.5 Coder" },
+  { v:"deepseek-coder",  l:"DeepSeek Coder" },
+  { v:"codellama",       l:"Code Llama" },
 ];
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+function CopyBtn({ text }: { text: string }) {
+  const [ok, setOk] = useState(false);
   return (
-    <button onClick={handleCopy}
-      className="p-1.5 rounded transition-all hover:opacity-80"
-      style={{ color: "var(--text-muted)", background: "rgba(255,255,255,0.06)" }}
-      title="Копировать">
-      {copied ? <Check size={13} style={{ color: "var(--accent)" }} /> : <Copy size={13} />}
-    </button>
+    <button onClick={async () => { await navigator.clipboard.writeText(text); setOk(true); setTimeout(() => setOk(false), 2000); }}
+      style={{ padding:"4px 10px", borderRadius:6, fontSize:11, fontWeight:600, cursor:"pointer",
+        border:"1px solid var(--border-2)", color: ok ? "#4ade80" : "var(--text-3)",
+        background:"var(--bg-2)", transition:"color .2s",
+      }}>{ok ? "✓ Скопировано" : "Копировать"}</button>
   );
 }
 
-function MessageBubble({ message }: { message: { role: string; content: string; id: string } }) {
-  const isUser = message.role === "user";
+function Bubble({ m }: { m: { role: string; content: string; id: string } }) {
+  const isUser = m.role === "user";
   return (
-    <div className={cn("flex gap-3 animate-slide-up", isUser ? "justify-end" : "justify-start")}>
+    <div className="anim-slide" style={{ display:"flex", gap:12, justifyContent: isUser ? "flex-end" : "flex-start" }}>
       {!isUser && (
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-1"
-          style={{ background: "linear-gradient(135deg, var(--primary), var(--accent))" }}>
-          <Zap size={14} color="white" />
-        </div>
+        <div style={{
+          width:32, height:32, borderRadius:10, flexShrink:0, marginTop:2,
+          background:"linear-gradient(135deg,#7655fc,#22d3ee)",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:14,
+        }}>⚡</div>
       )}
 
-      <div className={cn("max-w-[85%] min-w-0", isUser ? "items-end" : "items-start")} style={{ display: "flex", flexDirection: "column" }}>
+      <div style={{ maxWidth:"84%", minWidth:0 }}>
         {isUser ? (
-          <div className="px-5 py-3 rounded-2xl rounded-tr-sm text-sm leading-relaxed"
-            style={{ background: "rgba(124,92,252,0.2)", border: "1px solid rgba(124,92,252,0.3)", color: "var(--text)" }}>
-            {message.content}
-          </div>
+          <div style={{
+            padding:"12px 18px", borderRadius:"16px 4px 16px 16px",
+            fontSize:14, lineHeight:1.65,
+            background:"rgba(118,85,252,.18)",
+            border:"1px solid rgba(118,85,252,.3)",
+            color:"var(--text)",
+          }}>{m.content}</div>
         ) : (
-          <div className="w-full rounded-2xl rounded-tl-sm overflow-hidden"
-            style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
-            <div className="flex items-center justify-between px-4 py-2 border-b"
-              style={{ borderColor: "var(--border)", background: "rgba(255,255,255,0.02)" }}>
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--accent)" }} />
-                <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Vort AI</span>
-              </div>
-              <CopyButton text={message.content} />
+          <div style={{
+            borderRadius:"4px 16px 16px 16px",
+            border:"1px solid var(--border-2)",
+            background:"var(--bg-2)",
+            overflow:"hidden",
+          }}>
+            {/* AI header */}
+            <div style={{
+              display:"flex", alignItems:"center", justifyContent:"space-between",
+              padding:"10px 14px",
+              borderBottom:"1px solid var(--border)",
+              background:"rgba(255,255,255,.025)",
+            }}>
+              <span style={{ fontSize:11, fontWeight:600, color:"var(--text-3)", display:"flex", alignItems:"center", gap:6 }}>
+                <span style={{ width:6, height:6, borderRadius:"50%", background:"var(--accent)", display:"inline-block" }} />
+                Vort AI
+              </span>
+              <CopyBtn text={m.content} />
             </div>
-            <div className="px-5 py-4 prose-vort text-sm overflow-x-auto">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {message.content}
-              </ReactMarkdown>
+
+            {/* Content */}
+            <div className="prose" style={{ padding:"16px 18px", fontSize:13 }}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
             </div>
           </div>
         )}
       </div>
 
       {isUser && (
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-1 text-xs font-bold"
-          style={{ background: "var(--bg-elevated)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>
-          Я
-        </div>
+        <div style={{
+          width:32, height:32, borderRadius:10, flexShrink:0, marginTop:2,
+          background:"var(--bg-2)", border:"1px solid var(--border-2)",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:12, fontWeight:700, color:"var(--text-2)",
+        }}>Я</div>
       )}
     </div>
   );
@@ -96,301 +101,278 @@ function MessageBubble({ message }: { message: { role: string; content: string; 
 
 export default function BuildPage() {
   const [model, setModel] = useState("llama3.2");
-  const [ollamaError, setOllamaError] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [ollamaErr, setOllamaErr] = useState(false);
+  const endRef = useRef<HTMLDivElement>(null);
+  const taRef  = useRef<HTMLTextAreaElement>(null);
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error, setMessages, setInput, reload } = useChat({
-    api: "/api/chat",
-    body: { model },
-    onError: (err) => {
-      if (err.message.includes("503") || err.message.includes("Ollama")) {
-        setOllamaError(true);
-      }
-    },
-    onResponse: () => setOllamaError(false),
+  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, setInput } = useChat({
+    api:"/api/chat",
+    body:{ model },
+    onError: err => { if (err.message.includes("503")||err.message.includes("Ollama")||err.message.includes("fetch")) setOllamaErr(true); },
+    onResponse: () => setOllamaErr(false),
   });
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior:"smooth" }); }, [messages]);
 
-  const handleQuickPrompt = (prompt: string) => {
-    setInput(prompt);
-    textareaRef.current?.focus();
+  const send = (e: React.FormEvent) => { if (input.trim() && !isLoading) handleSubmit(e); };
+
+  const onKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(e as unknown as React.FormEvent); }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (input.trim() && !isLoading) {
-        handleSubmit(e as unknown as React.FormEvent);
-      }
-    }
-  };
-
-  const handleExport = () => {
-    const content = messages.map(m =>
-      `## ${m.role === "user" ? "Пользователь" : "Vort AI"}\n\n${m.content}`
-    ).join("\n\n---\n\n");
-    const blob = new Blob([content], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `vort-session-${Date.now()}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleClear = () => {
-    if (window.confirm("Очистить историю чата?")) setMessages([]);
-  };
-
-  const autoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const resize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     handleInputChange(e);
-    const ta = e.target;
-    ta.style.height = "auto";
-    ta.style.height = Math.min(ta.scrollHeight, 200) + "px";
+    const ta = e.target; ta.style.height="auto"; ta.style.height = Math.min(ta.scrollHeight, 180)+"px";
   };
 
-  const isEmpty = messages.length === 0;
+  const exportChat = () => {
+    const md = messages.map(m=>`## ${m.role==="user"?"Пользователь":"Vort AI"}\n\n${m.content}`).join("\n\n---\n\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([md], {type:"text/markdown"}));
+    a.download = `vort-${Date.now()}.md`; a.click();
+  };
 
   return (
-    <div className="h-screen flex flex-col pt-16" style={{ background: "var(--bg)" }}>
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b flex-shrink-0"
-        style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Zap size={16} style={{ color: "var(--primary-light)" }} />
-            <span className="text-sm font-semibold">AI Builder</span>
-          </div>
+    <div style={{ height:"100svh", display:"flex", flexDirection:"column", paddingTop:60, background:"var(--bg)" }}>
+
+      {/* ── Top bar ── */}
+      <div style={{
+        display:"flex", alignItems:"center", justifyContent:"space-between",
+        padding:"0 16px", height:48, flexShrink:0,
+        borderBottom:"1px solid var(--border)",
+        background:"var(--bg-1)",
+      }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <span style={{ fontSize:14, fontWeight:700 }}>⚡ AI Builder</span>
           {messages.length > 0 && (
-            <span className="text-xs px-2 py-0.5 rounded-full"
-              style={{ background: "var(--bg-elevated)", color: "var(--text-muted)" }}>
-              {messages.filter(m => m.role === "user").length} запросов
-            </span>
+            <span style={{
+              fontSize:11, padding:"2px 8px", borderRadius:5,
+              background:"var(--bg-3)", color:"var(--text-3)",
+            }}>{messages.filter(m=>m.role==="user").length} запросов</span>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Model selector */}
-          <div className="relative">
-            <select
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              className="appearance-none text-xs px-3 py-1.5 pr-7 rounded-lg border cursor-pointer"
-              style={{
-                background: "var(--bg-elevated)",
-                borderColor: "var(--border)",
-                color: "var(--text-muted)",
-              }}>
-              {MODELS.map(m => (
-                <option key={m.value} value={m.value}>{m.label}</option>
-              ))}
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          {/* Model */}
+          <div style={{ position:"relative" }}>
+            <select value={model} onChange={e=>setModel(e.target.value)} style={{
+              appearance:"none", cursor:"pointer",
+              padding:"5px 28px 5px 10px", borderRadius:7, fontSize:12,
+              border:"1px solid var(--border-2)",
+              background:"var(--bg-2)", color:"var(--text-2)",
+            }}>
+              {MODELS.map(m=><option key={m.v} value={m.v}>{m.l}</option>)}
             </select>
-            <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
-              style={{ color: "var(--text-dim)" }} />
+            <span style={{ position:"absolute", right:8, top:"50%", transform:"translateY(-50%)", pointerEvents:"none", fontSize:10, color:"var(--text-3)" }}>▾</span>
           </div>
 
-          {messages.length > 0 && (
-            <>
-              <button onClick={handleExport}
-                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-all hover:border-opacity-60"
-                style={{ background: "var(--bg-elevated)", borderColor: "var(--border)", color: "var(--text-muted)" }}>
-                <Download size={12} />
-                Экспорт
-              </button>
-              <button onClick={handleClear}
-                className="p-1.5 rounded-lg border transition-all hover:border-opacity-60"
-                style={{ background: "var(--bg-elevated)", borderColor: "var(--border)", color: "var(--text-muted)" }}>
-                <Trash2 size={14} />
-              </button>
-            </>
-          )}
+          {messages.length > 0 && <>
+            <button onClick={exportChat} style={{
+              padding:"5px 12px", borderRadius:7, fontSize:12, fontWeight:600, cursor:"pointer",
+              border:"1px solid var(--border-2)", background:"var(--bg-2)", color:"var(--text-2)",
+            }}>↓ Экспорт</button>
+            <button onClick={()=>{ if(window.confirm("Очистить?")) setMessages([]); }} style={{
+              padding:"5px 10px", borderRadius:7, fontSize:12, cursor:"pointer",
+              border:"1px solid var(--border-2)", background:"var(--bg-2)", color:"var(--text-3)",
+            }}>✕</button>
+          </>}
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar — quick prompts */}
-        <div className="hidden lg:flex flex-col w-72 border-r flex-shrink-0 overflow-y-auto"
-          style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-          <div className="p-4 border-b" style={{ borderColor: "var(--border)" }}>
-            <p className="text-xs font-semibold mb-0.5" style={{ color: "var(--text-muted)" }}>БЫСТРЫЕ ПРОМПТЫ</p>
-            <p className="text-xs" style={{ color: "var(--text-dim)" }}>Нажмите для вставки</p>
+      {/* ── Body ── */}
+      <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
+
+        {/* ─ Sidebar ─ */}
+        <aside style={{
+          width:240, flexShrink:0, display:"flex", flexDirection:"column",
+          borderRight:"1px solid var(--border)",
+          background:"var(--bg-1)", overflow:"hidden",
+        }}>
+          <div style={{ padding:"14px 14px 10px", borderBottom:"1px solid var(--border)" }}>
+            <p style={{ fontSize:10, fontWeight:700, letterSpacing:".08em", color:"var(--text-3)", textTransform:"uppercase" }}>
+              Быстрые промпты
+            </p>
           </div>
-          <div className="p-3 space-y-2 flex-1">
-            {QUICK_PROMPTS.map((prompt, i) => (
-              <button key={i} onClick={() => handleQuickPrompt(prompt)}
-                className="w-full text-left px-3 py-2.5 rounded-lg border text-xs leading-relaxed transition-all hover:border-opacity-60"
-                style={{ background: "var(--bg-elevated)", borderColor: "var(--border)", color: "var(--text-muted)" }}>
-                {prompt}
+
+          <div style={{ flex:1, overflowY:"auto", padding:"10px 10px" }}>
+            {PROMPTS.map((p, i) => (
+              <button key={i} onClick={()=>{ setInput(p.text); taRef.current?.focus(); }}
+                style={{
+                  width:"100%", textAlign:"left", display:"flex", alignItems:"flex-start", gap:8,
+                  padding:"10px 10px", borderRadius:9, marginBottom:4,
+                  border:"1px solid transparent", background:"transparent",
+                  cursor:"pointer", transition:"background .15s, border-color .15s",
+                }}
+                onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background="var(--bg-2)";(e.currentTarget as HTMLElement).style.borderColor="var(--border-2)";}}
+                onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background="transparent";(e.currentTarget as HTMLElement).style.borderColor="transparent";}}
+              >
+                <span style={{ fontSize:15, lineHeight:1, flexShrink:0, marginTop:1 }}>{p.icon}</span>
+                <div>
+                  <div style={{ fontSize:12, fontWeight:600, color:"var(--text)", marginBottom:2 }}>{p.label}</div>
+                  <div style={{ fontSize:11, color:"var(--text-3)", lineHeight:1.5 }}>{p.text.slice(0,52)}…</div>
+                </div>
               </button>
             ))}
           </div>
 
           {/* Ollama status */}
-          <div className="p-4 border-t" style={{ borderColor: "var(--border)" }}>
-            <div className="flex items-center gap-2 text-xs">
-              <div className={cn("w-2 h-2 rounded-full", ollamaError ? "bg-red-500" : "bg-emerald-500")}
-                style={!ollamaError ? { boxShadow: "0 0 6px rgba(16,185,129,0.6)" } : undefined} />
-              <span style={{ color: "var(--text-muted)" }}>
-                {ollamaError ? "Ollama недоступен" : "Ollama подключён"}
-              </span>
+          <div style={{ padding:"10px 14px", borderTop:"1px solid var(--border)" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:7, fontSize:11 }}>
+              <span style={{
+                width:7, height:7, borderRadius:"50%",
+                background: ollamaErr ? "#f87171" : "#4ade80",
+                display:"inline-block",
+                boxShadow: ollamaErr ? "0 0 5px #f87171" : "0 0 7px #4ade80",
+              }} />
+              <span style={{ color:"var(--text-2)" }}>{ollamaErr ? "Ollama недоступен" : "Ollama подключён"}</span>
             </div>
-            {ollamaError && (
-              <p className="text-xs mt-2" style={{ color: "var(--text-dim)" }}>
-                Запустите: <code className="text-xs" style={{ color: "var(--accent)" }}>ollama serve</code>
-              </p>
-            )}
+            {ollamaErr && <p style={{ fontSize:10, color:"var(--text-3)", marginTop:5 }}>
+              Запустите: <code style={{ color:"var(--accent)" }}>ollama serve</code>
+            </p>}
           </div>
-        </div>
+        </aside>
 
-        {/* Main chat area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        {/* ─ Chat ─ */}
+        <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-6">
-            {isEmpty ? (
+          <div style={{ flex:1, overflowY:"auto", padding:"24px 20px" }}>
+            {messages.length === 0 ? (
               /* Empty state */
-              <div className="max-w-2xl mx-auto h-full flex flex-col items-center justify-center text-center py-16">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
-                  style={{ background: "linear-gradient(135deg, var(--primary), var(--accent))" }}>
-                  <Zap size={28} color="white" />
-                </div>
-                <h2 className="text-2xl font-bold mb-3">Опишите вашу идею</h2>
-                <p className="text-sm mb-8 leading-relaxed max-w-md" style={{ color: "var(--text-muted)" }}>
-                  Напишите, какое приложение вы хотите создать. Vort сгенерирует архитектуру, схему базы данных, API и код компонентов.
+              <div style={{
+                height:"100%", display:"flex", flexDirection:"column",
+                alignItems:"center", justifyContent:"center", textAlign:"center",
+              }}>
+                <div style={{
+                  width:64, height:64, borderRadius:18, marginBottom:20,
+                  background:"linear-gradient(135deg,#7655fc,#22d3ee)",
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  fontSize:28, boxShadow:"0 0 40px rgba(118,85,252,.4)",
+                }} className="anim-float">⚡</div>
+                <h2 style={{ fontSize:"1.25rem", fontWeight:700, letterSpacing:"-0.02em", marginBottom:10 }}>
+                  Опишите ваше приложение
+                </h2>
+                <p style={{ fontSize:13, color:"var(--text-2)", lineHeight:1.65, maxWidth:380, marginBottom:28 }}>
+                  Напишите идею на русском — Vort сгенерирует архитектуру, SQL-схему, API endpoints и React-компоненты.
                 </p>
-
-                {/* Mobile quick prompts */}
-                <div className="lg:hidden w-full max-w-md space-y-2 mb-8">
-                  <p className="text-xs font-semibold mb-3" style={{ color: "var(--text-dim)" }}>БЫСТРЫЕ ПРОМПТЫ</p>
-                  {QUICK_PROMPTS.slice(0, 4).map((prompt, i) => (
-                    <button key={i} onClick={() => handleQuickPrompt(prompt)}
-                      className="w-full text-left px-4 py-3 rounded-xl border text-xs leading-relaxed transition-all"
-                      style={{ background: "var(--bg-card)", borderColor: "var(--border)", color: "var(--text-muted)" }}>
-                      {prompt}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex flex-wrap justify-center gap-2">
-                  {["CRM-система", "Интернет-магазин", "Трекер задач", "Финансы"].map((ex) => (
-                    <span key={ex} className="text-xs px-3 py-1.5 rounded-full border"
-                      style={{ borderColor: "var(--border)", color: "var(--text-dim)", background: "var(--bg-card)" }}>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:8, justifyContent:"center", maxWidth:480 }}>
+                  {["CRM-система","Маркетплейс","Канбан-доска","Финансы"].map(ex => (
+                    <button key={ex} onClick={()=>{ setInput(`Создай ${ex}`); taRef.current?.focus(); }}
+                      style={{
+                        padding:"6px 14px", borderRadius:8, fontSize:12, fontWeight:500,
+                        border:"1px solid var(--border-2)", background:"var(--bg-2)",
+                        color:"var(--text-2)", cursor:"pointer",
+                      }}>
                       {ex}
-                    </span>
+                    </button>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="max-w-3xl mx-auto space-y-6">
+              <div style={{ maxWidth:820, margin:"0 auto", display:"flex", flexDirection:"column", gap:20 }}>
                 {/* Ollama error banner */}
-                {ollamaError && (
-                  <div className="flex items-start gap-3 p-4 rounded-xl border"
-                    style={{ background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.3)" }}>
-                    <AlertCircle size={16} className="flex-shrink-0 mt-0.5" style={{ color: "#f87171" }} />
+                {ollamaErr && (
+                  <div style={{
+                    display:"flex", alignItems:"flex-start", gap:12,
+                    padding:"14px 16px", borderRadius:12,
+                    background:"rgba(248,113,113,.07)", border:"1px solid rgba(248,113,113,.25)",
+                  }}>
+                    <span style={{ fontSize:16 }}>⚠️</span>
                     <div>
-                      <p className="text-sm font-medium" style={{ color: "#f87171" }}>Ollama недоступен</p>
-                      <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-                        Убедитесь, что Ollama запущен: <code style={{ color: "var(--accent)" }}>ollama serve</code>
+                      <p style={{ fontSize:13, fontWeight:600, color:"#f87171", marginBottom:4 }}>Ollama недоступен</p>
+                      <p style={{ fontSize:12, color:"var(--text-2)" }}>
+                        Запустите: <code style={{ color:"var(--accent)" }}>ollama serve</code>
                       </p>
-                      <button onClick={() => reload()}
-                        className="flex items-center gap-1.5 text-xs mt-2 hover:underline"
-                        style={{ color: "#f87171" }}>
-                        <RotateCcw size={11} /> Повторить
-                      </button>
                     </div>
                   </div>
                 )}
 
-                {messages.map((message) => (
-                  <MessageBubble key={message.id} message={message} />
-                ))}
+                {messages.map(m => <Bubble key={m.id} m={m} />)}
 
                 {isLoading && (
-                  <div className="flex gap-3 animate-fade-in">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ background: "linear-gradient(135deg, var(--primary), var(--accent))" }}>
-                      <Zap size={14} color="white" />
-                    </div>
-                    <div className="px-5 py-4 rounded-2xl rounded-tl-sm"
-                      style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
-                      <div className="flex items-center gap-2">
-                        <Loader2 size={14} className="animate-spin" style={{ color: "var(--primary-light)" }} />
-                        <span className="text-xs" style={{ color: "var(--text-muted)" }}>Генерирую архитектуру...</span>
+                  <div className="anim-fade" style={{ display:"flex", gap:12 }}>
+                    <div style={{
+                      width:32, height:32, borderRadius:10, flexShrink:0,
+                      background:"linear-gradient(135deg,#7655fc,#22d3ee)",
+                      display:"flex", alignItems:"center", justifyContent:"center", fontSize:14,
+                    }}>⚡</div>
+                    <div style={{
+                      padding:"14px 18px", borderRadius:"4px 16px 16px 16px",
+                      border:"1px solid var(--border-2)", background:"var(--bg-2)",
+                    }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:13, color:"var(--text-2)" }}>
+                        <span style={{ display:"flex", gap:3 }}>
+                          {[0,1,2].map(i=>(
+                            <span key={i} style={{
+                              width:6, height:6, borderRadius:"50%", background:"var(--primary-2)",
+                              animation:`blink 1.2s ${i*0.2}s ease-in-out infinite`,
+                            }} />
+                          ))}
+                        </span>
+                        Генерирую архитектуру…
                       </div>
                     </div>
                   </div>
                 )}
-                <div ref={messagesEndRef} />
+                <div ref={endRef} />
               </div>
             )}
           </div>
 
-          {/* Input area */}
-          <div className="flex-shrink-0 border-t p-4"
-            style={{ background: "var(--bg-card)", borderColor: "var(--border)" }}>
-            <div className="max-w-3xl mx-auto">
-              <form onSubmit={handleSubmit}>
-                <div className="relative rounded-2xl border transition-all focus-within:border-opacity-80"
+          {/* ─ Input ─ */}
+          <div style={{
+            flexShrink:0, padding:"12px 20px 16px",
+            borderTop:"1px solid var(--border)",
+            background:"var(--bg-1)",
+          }}>
+            <form onSubmit={send} style={{ maxWidth:820, margin:"0 auto" }}>
+              <div style={{
+                borderRadius:14,
+                border:"1px solid rgba(118,85,252,.4)",
+                background:"var(--bg-2)",
+                boxShadow:"0 0 0 3px rgba(118,85,252,.07)",
+                overflow:"hidden",
+                transition:"box-shadow .2s",
+              }}>
+                <textarea
+                  ref={taRef}
+                  value={input}
+                  onChange={resize}
+                  onKeyDown={onKey}
+                  disabled={isLoading}
+                  rows={3}
+                  placeholder="Опишите приложение… (Enter — отправить, Shift+Enter — новая строка)"
                   style={{
-                    background: "var(--bg-elevated)",
-                    borderColor: "rgba(124,92,252,0.4)",
-                    boxShadow: "0 0 0 1px rgba(124,92,252,0.1)",
+                    width:"100%", display:"block",
+                    padding:"14px 18px 8px",
+                    fontSize:14, lineHeight:1.65,
+                    background:"transparent", border:"none", outline:"none", resize:"none",
+                    color:"var(--text)", minHeight:72, maxHeight:180,
+                    fontFamily:"var(--font-sans)",
+                  }}
+                />
+                <div style={{
+                  display:"flex", alignItems:"center", justifyContent:"space-between",
+                  padding:"8px 14px 12px",
+                }}>
+                  <span style={{ fontSize:11, color:"var(--text-3)" }}>
+                    {input.length > 0 ? `${input.length} симв.` : "Локально · данные не покидают ваш компьютер"}
+                  </span>
+                  <button type="submit" disabled={!input.trim()||isLoading} style={{
+                    display:"flex", alignItems:"center", gap:7,
+                    padding:"9px 20px", borderRadius:9,
+                    fontSize:13, fontWeight:700, color:"white", cursor:"pointer",
+                    border:"none",
+                    background: (!input.trim()||isLoading) ? "rgba(118,85,252,.3)" : "linear-gradient(135deg,#7655fc,#22d3ee)",
+                    boxShadow: (!input.trim()||isLoading) ? "none" : "0 0 20px rgba(118,85,252,.4)",
+                    transition:"opacity .15s, transform .15s",
+                    opacity: (!input.trim()||isLoading) ? .5 : 1,
                   }}>
-                  <textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={autoResize}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Опишите приложение, которое хотите создать... (Enter — отправить, Shift+Enter — новая строка)"
-                    rows={3}
-                    disabled={isLoading}
-                    className="w-full px-5 pt-4 pb-3 text-sm resize-none bg-transparent outline-none placeholder-opacity-40 leading-relaxed"
-                    style={{
-                      color: "var(--text)",
-                      minHeight: "80px",
-                      maxHeight: "200px",
-                    }}
-                  />
-
-                  <div className="flex items-center justify-between px-4 pb-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs" style={{ color: "var(--text-dim)" }}>
-                        {input.length > 0 && `${input.length} симв.`}
-                      </span>
-                      {/* Mobile quick prompts dropdown hint */}
-                      <span className="text-xs lg:hidden" style={{ color: "var(--text-dim)" }}>
-                        Enter — отправить
-                      </span>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={!input.trim() || isLoading}
-                      className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-                      style={{ background: "linear-gradient(135deg, var(--primary), var(--accent))" }}>
-                      {isLoading ? (
-                        <>
-                          <Loader2 size={14} className="animate-spin" />
-                          Генерирую...
-                        </>
-                      ) : (
-                        <>
-                          <Send size={14} />
-                          Создать
-                        </>
-                      )}
-                    </button>
-                  </div>
+                    {isLoading ? "…" : "⚡ Создать"}
+                  </button>
                 </div>
-              </form>
-
-              <p className="text-center text-xs mt-3" style={{ color: "var(--text-dim)" }}>
-                Работает локально через Ollama · Данные не покидают ваш компьютер
-              </p>
-            </div>
+              </div>
+            </form>
           </div>
         </div>
       </div>

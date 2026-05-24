@@ -1,86 +1,67 @@
 import Link from "next/link";
 import { VortLogo } from "@/components/vort-logo";
 
+const cols = [
+  { title:"Продукт", links:[
+    { href:"/how",      label:"Как работает" },
+    { href:"/examples", label:"Примеры" },
+    { href:"/pricing",  label:"Цены" },
+    { href:"/build",    label:"Builder" },
+  ]},
+  { title:"Стек", links:[
+    { href:"https://nextjs.org",            label:"Next.js 15" },
+    { href:"https://sdk.vercel.ai",         label:"Vercel AI SDK" },
+    { href:"https://ollama.com",            label:"Ollama" },
+    { href:"https://www.typescriptlang.org",label:"TypeScript" },
+  ]},
+];
+
 export function Footer() {
   return (
-    <footer
-      className="border-t mt-24"
-      style={{ borderColor: "var(--border)", background: "var(--bg-card)" }}
-    >
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          <div className="col-span-1 md:col-span-2">
-            <Link href="/" className="flex items-center gap-2.5 mb-4">
-              <VortLogo size={32} />
-              <span
-                style={{
-                  fontWeight: 800,
-                  fontSize: "1.2rem",
-                  letterSpacing: "-0.03em",
-                  background: "linear-gradient(135deg, #9d7ffe, #00d4ff)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                Vort
-              </span>
+    <footer style={{ borderTop:"1px solid var(--border)", background:"var(--bg-1)" }}>
+      <div style={{ maxWidth:1200, margin:"0 auto", padding:"56px 24px 40px" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:40 }}>
+
+          {/* Brand */}
+          <div>
+            <Link href="/" style={{ display:"inline-flex",alignItems:"center",gap:10,textDecoration:"none",marginBottom:16 }}>
+              <VortLogo size={30}/>
+              <span style={{
+                fontWeight:800, fontSize:18, letterSpacing:"-0.04em",
+                background:"linear-gradient(120deg,#a78bfa,#22d3ee)",
+                WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text",
+              }}>Vort</span>
             </Link>
-            <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
-              Опишите вашу идею на русском языке — Vort создаст полноценное приложение с кодом, базой данных и API за секунды.
+            <p style={{ fontSize:13, lineHeight:1.7, color:"var(--text-2)", maxWidth:260 }}>
+              Опишите идею — получите готовое приложение. AI-конструктор на базе Ollama, работает локально.
             </p>
           </div>
 
-          <div>
-            <h4 className="text-sm font-semibold mb-4" style={{ color: "var(--text)" }}>
-              Продукт
-            </h4>
-            <ul className="space-y-2">
-              {[
-                { href: "/how", label: "Как это работает" },
-                { href: "/examples", label: "Примеры" },
-                { href: "/pricing", label: "Цены" },
-                { href: "/build", label: "Запустить" },
-              ].map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm transition-colors duration-200 hover:text-white"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-semibold mb-4" style={{ color: "var(--text)" }}>
-              Технологии
-            </h4>
-            <ul className="space-y-2">
-              {["Next.js 15", "Vercel AI SDK", "Ollama", "TypeScript", "Tailwind CSS"].map(
-                (tech) => (
-                  <li key={tech} className="text-sm" style={{ color: "var(--text-muted)" }}>
-                    {tech}
+          {/* Nav cols */}
+          {cols.map(col=>(
+            <div key={col.title}>
+              <p style={{ fontSize:11,fontWeight:700,letterSpacing:".08em",color:"var(--text-3)",marginBottom:16,textTransform:"uppercase" }}>
+                {col.title}
+              </p>
+              <ul style={{ listStyle:"none",display:"flex",flexDirection:"column",gap:10 }}>
+                {col.links.map(l=>(
+                  <li key={l.href}>
+                    <Link href={l.href} className="link-subtle" style={{
+                      fontSize:13, color:"var(--text-2)", textDecoration:"none",
+                    }}>{l.label}</Link>
                   </li>
-                )
-              )}
-            </ul>
-          </div>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div
-          className="mt-10 pt-8 flex items-center justify-between border-t"
-          style={{ borderColor: "var(--border)" }}
-        >
-          <p className="text-xs" style={{ color: "var(--text-dim)" }}>
-            © 2025 Vort. Все права защищены.
-          </p>
-          <p className="text-xs" style={{ color: "var(--text-dim)" }}>
-            Powered by Ollama + Vercel AI SDK
-          </p>
+        <div style={{
+          marginTop:48, paddingTop:24, borderTop:"1px solid var(--border)",
+          display:"flex", alignItems:"center", justifyContent:"space-between",
+        }}>
+          <p style={{ fontSize:12, color:"var(--text-3)" }}>© 2025 Vort</p>
+          <p style={{ fontSize:12, color:"var(--text-3)" }}>Powered by Ollama · Vercel AI SDK</p>
         </div>
       </div>
     </footer>
